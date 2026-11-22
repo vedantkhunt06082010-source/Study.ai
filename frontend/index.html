@@ -1,1 +1,109 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ShikshaAI — ધોરણ ૧ થી કોલેજ AI</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen">
+  <header class="bg-indigo-700 text-white p-4 shadow">
+    <div class="max-w-3xl mx-auto">
+      <h1 class="text-xl font-bold">ShikshaAI</h1>
+      <p class="text-xs text-indigo-100">ધોરણ ૧ થી કોલેજ સુધીનો સ્માર્ટ AI શિક્ષક</p>
+    </div>
+  </header>
 
+  <main class="max-w-3xl mx-auto p-4 space-y-4">
+    <div class="bg-white p-4 rounded-xl shadow-sm grid grid-cols-2 gap-3">
+      <div>
+        <label class="block text-xs font-semibold mb-1">ધોરણ</label>
+        <select id="grade" class="w-full border rounded-lg p-2 text-sm">
+          <option value="1-5">ધોરણ ૧ – ૫</option>
+          <option value="6-10" selected>ધોરણ ૬ – ૧૦</option>
+          <option value="11-12">ધોરણ ૧૧ – ૧૨</option>
+          <option value="college">કોલેજ</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold mb-1">વિષય</label>
+        <input id="subject" type="text" value="ગણિત" class="w-full border rounded-lg p-2 text-sm" />
+      </div>
+      <div>
+        <label class="block text-xs font-semibold mb-1">ભાષા</label>
+        <select id="language" class="w-full border rounded-lg p-2 text-sm">
+          <option value="Gujarati" selected>ગુજરાતી</option>
+          <option value="English">English</option>
+          <option value="Hindi">हिन्दी</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold mb-1">રીત</label>
+        <select id="mode" class="w-full border rounded-lg p-2 text-sm">
+          <option value="hint">Hint (પહેલું સ્ટેપ)</option>
+          <option value="full" selected>પૂરો જવાબ</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="bg-white p-4 rounded-xl shadow-sm space-y-3">
+      <textarea id="question" rows="3" placeholder="અહીં તમારો સવાલ લખો અથવા નીચેથી ફોટો અપલોડ કરો..."
+        class="w-full border rounded-xl p-3 text-sm"></textarea>
+      <div class="flex items-center justify-between gap-2">
+        <input id="imageInput" type="file" accept="image/*" class="text-xs" />
+        <button onclick="sendQuestion()" id="btn"
+          class="bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold">
+          જવાબ મેળવો
+        </button>
+      </div>
+    </div>
+
+    <div id="resultBox" class="hidden bg-white p-5 rounded-xl shadow-sm">
+      <div id="resultText" class="prose max-w-none text-sm leading-relaxed"></div>
+    </div>
+  </main>
+
+  <script>
+    // Render પર Backend લાઈવ થયા પછી નીચેની URL બદલીને તમારી Render URL મૂકજો
+    const API_URL = "https://study-ai-1-5rae.onrender.com/api/ask";
+
+    async function sendQuestion() {
+      const q = document.getElementById("question").value;
+      const img = document.getElementById("imageInput").files[0];
+      if (!q.trim() && !img) {
+        alert("કૃપા કરીને સવાલ લખો અથવા ફોટો પસંદ કરો.");
+        return;
+      }
+
+      const btn = document.getElementById("btn");
+      const box = document.getElementById("resultBox");
+      const out = document.getElementById("resultText");
+
+      btn.disabled = true;
+      btn.textContent = "સમજાવી રહ્યું છે...";
+      box.classList.remove("hidden");
+      out.innerHTML = "જવાબ તૈયાર થઈ રહ્યો છે...";
+
+      const fd = new FormData();
+      fd.append("grade", document.getElementById("grade").value);
+      fd.append("subject", document.getElementById("subject").value);
+      fd.append("language", document.getElementById("language").value);
+      fd.append("mode", document.getElementById("mode").value);
+      fd.append("question", q);
+      if (img) fd.append("image", img);
+
+      try {
+        const res = await fetch(API_URL, { method: "POST", body: fd });
+        const data = await res.json();
+        out.innerHTML = marked.parse(data.answer || "જવાબ મળ્યો નથી.");
+      } catch (e) {
+        out.innerHTML = "<span class='text-red-600'>Backend સાથે કનેક્ટ થવામાં ભૂલ આવી. URL અને Server તપાસો.</span>";
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "જવાબ મેળવો";
+      }
+    }
+  </script>
+</body>
+</html>
